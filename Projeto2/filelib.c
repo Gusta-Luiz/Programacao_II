@@ -5,7 +5,7 @@
 
 /*  */
 
-char* le_arquivo(char *nome_arquivo, long int *tamanho_arquivo)
+char* file_read(char *nome_arquivo, int *tamanho_arquivo)
 {
     /* Abre o arquivo para leitura indicado e retorna um ponteiro para o stream */    
     FILE *arquivo = fopen(nome_arquivo, "r");
@@ -40,12 +40,24 @@ char* le_arquivo(char *nome_arquivo, long int *tamanho_arquivo)
         printf("Erro ao ler o conteudo do arquivo\n");
         exit(1);
     }
-
     /* Fecha o arquivo */
     if (fclose(arquivo) != 0) {
         printf("Erro ao fechar o arquivo\n");
         exit(1);
     }
-
+    /* Retorna o conteudo do arquivo */
     return conteudo_arquivo;
+}
+
+/* Realiza a busca de uma string e retorna o numero de ocorrencias da mesma 
+ * Recebe a "Palavra" a ser procurada, o Local onde procurar e o tamanho deste local */
+int str_grep(char *conteudo, int tamanho, char *palavra)
+{
+    int ocorrencia = 0;
+    char *posicao_ocorrencia = conteudo;
+    /* Conta a quantidade de ocorrencias da palavra no conteudo do arquivo */
+    while ((posicao_ocorrencia = strstr(posicao_ocorrencia, palavra)) != NULL) {
+        ocorrencia++;
+        posicao_ocorrencia += strlen(palavra);
+    }
 }
