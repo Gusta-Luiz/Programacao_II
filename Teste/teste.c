@@ -27,11 +27,12 @@ char *arq_leitura(char *nome_arquivo)
         exit(1);
     }
     /* Aloca memoria para o conteudo do arquivo */
-    char *conteudo_arquivo = (char *) malloc(tamanho_arquivo+1);
+    char *conteudo_arquivo = malloc((tamanho_arquivo + 1)  * sizeof(char));
     if (conteudo_arquivo == NULL) {
         printf("ERRO ao alocar memoria para o conteudo do arquivo %s\n", nome_arquivo);
         exit(1);
     }
+    conteudo_arquivo[tamanho_arquivo] = '\0';
     /* Le o conteudo do arquivo na memoria */
     if (fread(conteudo_arquivo, 1, tamanho_arquivo, arquivo) != tamanho_arquivo) {
         printf("ERRO ao ler o conteudo do arquivo %s\n", nome_arquivo);
@@ -46,7 +47,32 @@ char *arq_leitura(char *nome_arquivo)
     return conteudo_arquivo;
 }
 
-/* <DETALHAMENTO-DO-ARTIGO TITULO-DO-PERIODICO-OU-REVISTA="Random Structures &amp; Algorithms" ISSN="10429832" */
+char *arq_crialista(char *conteudo_curriculo, char *lista) {
+    /* Encontra todas as ocorrencias de "Periodicos" no curriculo e os salva em outra string */
+    char *conteudo = conteudo_curriculo;
+    int cont = 0;
+    while ((conteudo = strstr(conteudo, "REVISTA")) != NULL) {
+        cont++;
+        /* Aponta o ponteiro para apos a string REVISTA=" (9*char) onde esta o titulo */
+        conteudo += 9;
+        /* junta a string finalizada em " na lista */
+        char *fim = strchr(conteudo, '"');
+        /* Aloca o espaco da string e a copia ao final da lista */
+        int tam_str = fim - conteudo;
+        if (cont == 1) { 
+            lista = malloc((tam_str + 2) * sizeof(char));
+            strncpy(lista, conteudo, tam_str);
+        } else {
+            lista = realloc(lista, (tam_str + strlen(lista) + 2) * sizeof(char));
+            strncat(lista, conteudo, tam_str);
+        }
+        /* Adiciona um espaço ao final da string */
+        strcat(lista, "\n");
+    }
+    printf("Numero total encontrado: %d\n", cont);
+    return lista;
+}
+
 /* Chamada: ./teste -c <curriculo> -p <txt periodicos>*/
 
 int main (int argc, char *argv[])
@@ -76,26 +102,12 @@ int main (int argc, char *argv[])
     /* Le o conteudo dos arquivos */
     char *conteudo_curriculo = arq_leitura(curriculo);
     char *conteudo_periodicos = arq_leitura(periodicos);
-    char *lista = malloc(sizeof(char));
 
-    /* Encontra todas as ocorrencias de "Periodicos" no curriculo e os salva em outra string */
-    char *periodicos_curriculo = conteudo_curriculo;
-    int cont = 0;
-    while ((periodicos_curriculo = strstr(periodicos_curriculo, "REVISTA")) != NULL) {
-        cont++;
-        periodicos_curriculo += strlen("REVISTA='");
-        /* junta a string finalizada em " na lista */
-        char *p = strchr(periodicos_curriculo, '"');
-        /* Copia a string ao final da lista */
-        lista = realloc(lista, strlen(lista) + strlen(periodicos_curriculo) + 2);
-        strncat(lista, periodicos_curriculo, p - periodicos_curriculo);
-        /* Adiciona um espaço ao final da string */
-        strcat(lista, "\n");
-        
+    char *lista = NULL;
+    lista = arq_crialista(conteudo_curriculo, lista);
+    printf("%s \n", lista);
 
-    }
-    printf("Total de periodicos: %d \n", cont);
-    printf("Lista de periodicos: %s \n", lista);
+
 
     free(lista);
     free(conteudo_curriculo);
