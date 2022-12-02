@@ -20,11 +20,6 @@ struct lista_qualis_t {
     int num_total;              /* Numero de qualis */
 } typedef lista_qualis;
 
-struct lista_pesquisadores_t {
-    pesquisador **pesquisadores; /* Vetor de pesquisadores */
-    int num_total;               /* Numero de pesquisadores */
-} typedef lista_pesquisadores;
-
 /* Recebe a entrada de "main" e analisa seus argumentos para que correspondam a chamada 
  * Retorna 1 em caso de sucesso, ou 0 em erro */
 int testa_entrada(int argc, char *argv[], char **curriculo, char **conferencias, char **artigos);

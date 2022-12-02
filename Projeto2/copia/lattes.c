@@ -35,20 +35,6 @@ int main(int argc, char *argv[])
         printf("ERRO: não foi possivel abrir diretorio\n" );
         exit(1);
     }
-    /* Salva o numero total de arquivos .xml */
-    int num_arquivos = 0;
-    while ((files = readdir(dir)) != NULL) {
-        if (strstr(files->d_name, ".xml") != NULL) {
-            num_arquivos++;
-        }
-    }
-    printf("Numero de arquivos: %d\n", num_arquivos);
-    rewinddir(dir);
-
-    /* Cria um vetor de autores */
-    lista_pesquisadores *autores = malloc(num_arquivos * sizeof(lista_pesquisadores));
-    autores->num_total = 0;
-
     /* Inicia o laco de repeticao para todos os curriculos do diretorio */
     while ((files = readdir(dir)) != NULL) {
     /* Ignora os arquivos . e .. */
@@ -88,23 +74,29 @@ int main(int argc, char *argv[])
     }
     conteudo_lattes = arq_lattes;
     /*--------------------------------------------------------------------*/
-    /* Salva a struct do autor no vetor de autores */
-    autores->num_total++;
-    autores->pesquisadores[autores->num_total - 1] = autor;
+
+    /* imprime toda a lista de periodicos do autor */
+    printf("Periodicos:\n");
+    for (int i = 0; i < autor->num_periodicos; i++)
+        printf("Ano: %s, %s -> %s\n", autor->periodicos[i].ano, autor->periodicos[i].titulo, autor->periodicos[i].classe);
+
+    /* imprime toda a lista de conferencias do autor */
+    printf("Conferencias:\n");
+    for (int i = 0; i < autor->num_conferencias; i++)
+        printf("Ano: %s, %s -> %s\n", autor->conferencias[i].ano, autor->conferencias[i].titulo, autor->conferencias[i].classe);
+
+    /* imprime o nome do autor */
+    printf("Nome: %s\n\n\n", autor->nome);
+
     free(arq_lattes);
+    limpa_pesquisador(autor);
     free(nome_arquivo);
     }
+
     closedir(dir);
-
-    /* Imprime o resultado */
-    int i;
-    for (i = 0; i < autores->num_total; i++) {
-        printf("Nome: %s\n", autores->pesquisadores[i]->nome);
-        printf("Total de artigos: %d\n", autores->pesquisadores[i]->num_periodicos);
-        printf("Total de conferencias: %d\n", autores->pesquisadores[i]->num_conferencias);
-    }
-
+    /* Limpa todos os allocs */
     limpa_lista(lista_conferencias);
     limpa_lista(lista_periodicos);
     return 0;
+
 }
