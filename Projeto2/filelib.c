@@ -294,17 +294,3 @@ int cria_artigo(pesquisador *autor, char *titulo, char *ano, char *classe, char 
     }
     return 1;
 }
-
-/* Lista todos os arquivos dentro do diretorio */
-int listagem_arq (char *nome_dir) {
-   struct dirent *files;
-   DIR *dir = opendir(nome_dir);
-   if (dir == NULL){
-      printf("ERRO: não foi possivel abrir diretorio\n" );
-      exit(1);
-   }
-   while ((files = readdir(dir)) != NULL)
-    printf("%s ", files->d_name);
-   closedir(dir);
-   return 0;
-}

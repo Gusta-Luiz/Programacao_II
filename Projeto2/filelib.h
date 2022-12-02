@@ -63,3 +63,6 @@ int checa_artigo(char **titulo, char **classe, lista_qualis *lista);
 /* Recebe os dados para a criacao de um novo artigo e o autor do mesmo,
  * Aloca o espaco necessario e retorna 1 em sucesso, 0 o contrario */
 int cria_artigo(pesquisador *autor, char *titulo, char *ano, char *classe, char *tipo);
+
+/* Cria uma nova struct de pesquisador, procura seu nome na string e preenche alguns dados */
+pesquisador *cria_pesquisador(char *nome, char *conteudo);

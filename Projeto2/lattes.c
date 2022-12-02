@@ -42,12 +42,7 @@ int main(int argc, char *argv[])
             num_arquivos++;
         }
     }
-    printf("Numero de arquivos: %d\n", num_arquivos);
     rewinddir(dir);
-
-    /* Cria um vetor de autores */
-    lista_pesquisadores *autores = malloc(num_arquivos * sizeof(lista_pesquisadores));
-    autores->num_total = 0;
 
     /* Inicia o laco de repeticao para todos os curriculos do diretorio */
     while ((files = readdir(dir)) != NULL) {
@@ -57,8 +52,11 @@ int main(int argc, char *argv[])
     /* Concatena o nome do arquivo com o diretorio de entrada */
     char *nome_arquivo = malloc(strlen(inp_dir) + strlen(files->d_name) + 2);   
     strcpy(nome_arquivo, inp_dir);
-    strcat(nome_arquivo, "/");
     strcat(nome_arquivo, files->d_name);
+
+
+    printf("Numero de arquivos: %d\n", num_arquivos);
+    printf("Arquivo atual %s: \n", nome_arquivo);
 
     /* Processa o conteudo do lattes e cria uma nova struct para o pesquisador */
     char *arq_lattes = leitura_arq(nome_arquivo);
@@ -88,21 +86,15 @@ int main(int argc, char *argv[])
     }
     conteudo_lattes = arq_lattes;
     /*--------------------------------------------------------------------*/
-    /* Salva a struct do autor no vetor de autores */
-    autores->num_total++;
-    autores->pesquisadores[autores->num_total - 1] = autor;
+
     free(arq_lattes);
     free(nome_arquivo);
     }
     closedir(dir);
 
+
     /* Imprime o resultado */
-    int i;
-    for (i = 0; i < autores->num_total; i++) {
-        printf("Nome: %s\n", autores->pesquisadores[i]->nome);
-        printf("Total de artigos: %d\n", autores->pesquisadores[i]->num_periodicos);
-        printf("Total de conferencias: %d\n", autores->pesquisadores[i]->num_conferencias);
-    }
+    imprime_pesquisador(autor);
 
     limpa_lista(lista_conferencias);
     limpa_lista(lista_periodicos);
