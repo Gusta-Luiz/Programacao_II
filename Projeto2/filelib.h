@@ -8,7 +8,7 @@ struct artigos_t {
 
 struct pesquisador_t {
     char *nome;                 /* Nome do pesquisador */
- /* char *grupo; */             /* Grupo de pesquisa do pesquisador NAO USEI*/
+ /* char *grupo; */             /* Grupo de pesquisa do pesquisador */
     int num_periodicos;         /* Numero de artigos publicados */
     artigos *periodicos;        /* Vetor de periodicos */
     int num_conferencias;       /* Numero de conferencias */
@@ -47,7 +47,7 @@ pesquisador *cria_pesquisador(char *nome);
 
 /* Limpa os dados alocados na lista de artigos de um certo pesquisador 
  * E em seguida limpa a propria struct, retorna 1 em sucesso, ou 0 o contrario */
-int limpa_pesquisador(pesquisador *pesquisador);
+int limpa_pesquisadores(lista_pesquisadores *pesquisador);
 
 /* Recebe uma string onde ira ser procurado a string "alvo", que antecede nossa resposta,
  * entao encontra esta resposta (que esta entre " ") e a retorna */
@@ -64,5 +64,21 @@ int checa_artigo(char **titulo, char **classe, lista_qualis *lista);
  * Aloca o espaco necessario e retorna 1 em sucesso, 0 o contrario */
 int cria_artigo(pesquisador *autor, char *titulo, char *ano, char *classe, char *tipo);
 
-/* Cria uma nova struct de pesquisador, procura seu nome na string e preenche alguns dados */
-pesquisador *cria_pesquisador(char *nome, char *conteudo);
+/* Salva todos os artigos, separados por classe em uma lista */
+lista_qualis *salva_lista_estrato(lista_pesquisadores *lista, char *classe, char *tipo);
+
+/* Imprime todos os artigos, separados por classe */
+/* Imprime os periodicos por estrato */
+void imprime_estratos(lista_pesquisadores *vetor_autores);
+
+/* Recebe uma lista de strings, conta a ocorrencia de cada string e adiciona o numero ao final da string 
+ * Entao remove strings duplicadas da lista */
+void conta_ocorrencias(lista_qualis *lista);
+
+
+/* Recebe uma lista de strings, conta a ocorrencia de cada string e adiciona o numero ao final da string 
+ * Entao remove strings duplicadas da lista */
+void conta_e_remove(lista_qualis *lista);
+
+/* Imprime a ocorrencia de cada classe de um autor */
+void imprime_autor(pesquisador *autor);

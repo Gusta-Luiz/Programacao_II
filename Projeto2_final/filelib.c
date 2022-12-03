@@ -138,26 +138,28 @@ pesquisador *cria_pesquisador(char *nome)
 
 /* Limpa os dados alocados na lista de artigos de um certo pesquisador 
  * E em seguida limpa a propria struct, retorna 1 em sucesso, ou 0 o contrario */
-int limpa_pesquisador(pesquisador *pesquisador)
+int limpa_pesquisadores(lista_pesquisadores *autor)
 {
-    if (pesquisador == NULL)
+    if (autor == NULL)
         return 0;
-    /* Limpa a lista */
-    printf("Liberando memoria...\n");
-    for (int i = 0; i < pesquisador->num_periodicos; i++){
-        free(pesquisador->periodicos[i].titulo);
-        free(pesquisador->periodicos[i].classe);
-        free(pesquisador->periodicos[i].ano);
+    for (int i = 0; i < autor->num_total; i++) {
+        free(autor->pesquisadores[i]->nome);
+        for (int j = 0; j < autor->pesquisadores[i]->num_periodicos; j++) {
+            free(autor->pesquisadores[i]->periodicos[j].titulo);
+            free(autor->pesquisadores[i]->periodicos[j].classe);
+            free(autor->pesquisadores[i]->periodicos[j].ano);
+        }
+        for (int j = 0; j < autor->pesquisadores[i]->num_conferencias; j++) {
+            free(autor->pesquisadores[i]->conferencias[j].titulo);
+            free(autor->pesquisadores[i]->conferencias[j].classe);
+            free(autor->pesquisadores[i]->conferencias[j].ano);
+        }
+        free(autor->pesquisadores[i]->periodicos);
+        free(autor->pesquisadores[i]->conferencias);
+        free(autor->pesquisadores[i]);
     }
-    for (int i = 0; i < pesquisador->num_conferencias; i++){
-        free(pesquisador->conferencias[i].titulo);
-        free(pesquisador->conferencias[i].classe);
-        free(pesquisador->conferencias[i].ano);
-    }
-    free(pesquisador->nome);
-    free(pesquisador->periodicos);
-    free(pesquisador->conferencias);
-    free(pesquisador);
+    free(autor->pesquisadores);
+    free(autor);
     return 1;
 }
 
@@ -234,7 +236,6 @@ int checa_artigo(char **titulo, char **classe, lista_qualis *lista)
     int menor_distancia = 100;
     char *titulo_menor = NULL;
 
-    printf("Checando artigo: %s\n", *titulo);
     /* Compara o titulo do artigo com todas as strings do vetor */
     for (int i = 0; i < lista->num_total; i++) {
         distancia = compara_str(*titulo, lista->strings[i]);
@@ -245,9 +246,6 @@ int checa_artigo(char **titulo, char **classe, lista_qualis *lista)
         if (menor_distancia == 3)
             break;
     }
-    
-    printf("Menor: %d -> ", menor_distancia);
-    printf("Titulo: %s\n", titulo_menor);
     if (menor_distancia < 16) {
         /* Separa o titulo do arquivo de artigos em titulo e classe */
         char *tmp = strrchr(titulo_menor, ' ');
@@ -295,16 +293,149 @@ int cria_artigo(pesquisador *autor, char *titulo, char *ano, char *classe, char 
     return 1;
 }
 
-/* Lista todos os arquivos dentro do diretorio */
-int listagem_arq (char *nome_dir) {
-   struct dirent *files;
-   DIR *dir = opendir(nome_dir);
-   if (dir == NULL){
-      printf("ERRO: não foi possivel abrir diretorio\n" );
-      exit(1);
-   }
-   while ((files = readdir(dir)) != NULL)
-    printf("%s ", files->d_name);
-   closedir(dir);
-   return 0;
+/* Salva todos os artigos, separados por classe em uma lista */
+lista_qualis *salva_lista_estrato(lista_pesquisadores *lista, char *classe, char *tipo)
+{
+    int i, j;
+    lista_qualis *estrato = malloc(sizeof(lista_qualis));
+    estrato->num_total = 0;
+    estrato->strings = '\0';
+
+    for (i = 0; i < lista->num_total; i++) {
+        if (strcmp(tipo, "periodico") == 0) {
+            /* Imprime os artigos de periodicos */
+            for (j = 0; j < lista->pesquisadores[i]->num_periodicos; j++) {
+                if (strcmp(lista->pesquisadores[i]->periodicos[j].classe, classe) == 0) {
+                    /* Salva o titulo na lista */
+                    estrato->strings = realloc(estrato->strings, (estrato->num_total + 1) * sizeof(char *));
+                    estrato->strings[estrato->num_total] = lista->pesquisadores[i]->periodicos[j].titulo;
+                    estrato->num_total++;
+                }
+            }
+        } else if (strcmp(tipo, "conferencia") == 0) {
+            /* Imprime os artigos de conferencia */
+            for (j = 0; j < lista->pesquisadores[i]->num_conferencias; j++) {
+                if (strcmp(lista->pesquisadores[i]->conferencias[j].classe, classe) == 0) {
+                    /* Salva o titulo na lista */
+                    estrato->strings = realloc(estrato->strings, (estrato->num_total + 1) * sizeof(char *));
+                    estrato->strings[estrato->num_total] = lista->pesquisadores[i]->conferencias[j].titulo;
+                    estrato->num_total++;
+                }
+            }
+        }
+    }
+    return estrato;
+}
+
+/* Imprime todos os artigos, separados por classe */
+/* Imprime os periodicos por estrato */
+void imprime_estratos(lista_pesquisadores *vetor_autores)
+{
+   printf("Periodicos por estrato:\n");
+    char *classes[9] = {"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C"};
+    for (int i = 0; i < 9; i++) {
+        lista_qualis *lista = salva_lista_estrato(vetor_autores, classes[i], "periodico");
+        conta_e_remove(lista);
+        /* imprime a lista */
+        if (lista->num_total > 0) {
+            printf("Estrato %s:\n", classes[i]);
+            for (int j = 0; j < lista->num_total; j++)
+                printf("%s\n", lista->strings[j]);
+            printf("\n");
+        }
+        free(lista->strings);
+        free(lista);
+    }
+
+    printf("----------------------------------------------------------------------\n\n");
+
+    /* Imprime as conferencias por estrato */
+    printf("Conferencias por estrato:\n");
+    char *classe[9] = {"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C"};
+    for (int i = 0; i < 9; i++) {
+        
+        lista_qualis *lista = salva_lista_estrato(vetor_autores, classe[i], "conferencia");
+        conta_e_remove(lista);
+        /* imprime a lista */
+        if (lista->num_total > 0) {
+            printf("Estrato %s:\n", classes[i]);
+            for (int j = 0; j < lista->num_total; j++)
+                printf("%s\n", lista->strings[j]);
+            printf("\n");
+        }
+        free(lista->strings);
+        free(lista);
+    }
+}
+
+/* Recebe uma lista de strings, conta a ocorrencia de cada string e adiciona o numero ao final da string 
+ * Entao remove strings duplicadas da lista */
+void conta_e_remove(lista_qualis *lista)
+{
+    int i, j, k;
+    int ocorrencias = 0;
+    char *tmp;
+
+    for (i = 0; i < lista->num_total; i++) {
+        ocorrencias = 1;
+        for (j = i + 1; j < lista->num_total; j++) {
+            if (strcmp(lista->strings[i], lista->strings[j]) == 0) {
+                ocorrencias++;
+                /* Remove a string duplicada e desloca as strings seguintes */
+                for (k = j; k < lista->num_total - 1; k++)
+                    lista->strings[k] = lista->strings[k + 1];
+                lista->num_total--;
+                j--;
+            }
+        }
+        /* Adiciona o numero de ocorrencias ao final da string */
+        lista->strings[i] = realloc(lista->strings[i], (strlen(lista->strings[i]) + 6) * sizeof(char));
+        tmp = malloc(6 * sizeof(char));
+        sprintf(tmp, " (%d)", ocorrencias);
+        strcat(lista->strings[i], tmp);
+        free(tmp);
+    }
+}
+
+/* Imprime a ocorrencia de cada classe de um autor */
+void imprime_autor(pesquisador *autor)
+{
+    int i, j;
+    int ocorrencias_periodicos[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int ocorrencias_conferencias[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    char *classes[9] = {"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C"};
+    /* Conta a ocorrencia de cada classe de periodicos */
+    for (i = 0; i < autor->num_periodicos; i++) {
+        for (j = 0; j < 9; j++) {
+            if (strcmp(autor->periodicos[i].classe, classes[j]) == 0) {
+                ocorrencias_periodicos[j]++;
+                break;
+            }
+        }
+    }
+    /* Conta a ocorrencia de cada classe de conferencias */
+    for (i = 0; i < autor->num_conferencias; i++) {
+        for (j = 0; j < 9; j++) {
+            if (strcmp(autor->conferencias[i].classe, classes[j]) == 0) {
+                ocorrencias_conferencias[j]++;
+                break;
+            }
+        }
+    }
+    /* Imprime a ocorrencia de cada classe de periodicos */
+    /* Imprime as ocorrencias */
+    printf("\nPesquisador: %s\n", autor->nome);
+    printf("+-------------+-------------+\n");
+    printf("| Periodicos | Conferencias |\n");
+    printf("+-------------+-------------+\n");
+    printf("| A1: %d      |   A1: %d    |\n", ocorrencias_periodicos[0], ocorrencias_conferencias[0]);
+    printf("| A2: %d      |   A2: %d    |\n", ocorrencias_periodicos[1], ocorrencias_conferencias[1]);
+    printf("| A3: %d      |   A3: %d    |\n", ocorrencias_periodicos[2], ocorrencias_conferencias[2]);
+    printf("| A4: %d      |   A4: %d    |\n", ocorrencias_periodicos[3], ocorrencias_conferencias[3]);
+    printf("| B1: %d      |   B1: %d    |\n", ocorrencias_periodicos[4], ocorrencias_conferencias[4]);
+    printf("| B2: %d      |   B2: %d    |\n", ocorrencias_periodicos[5], ocorrencias_conferencias[5]);
+    printf("| B3: %d      |   B3: %d    |\n", ocorrencias_periodicos[6], ocorrencias_conferencias[6]);
+    printf("| B4: %d      |   B4: %d    |\n", ocorrencias_periodicos[7], ocorrencias_conferencias[7]);
+    printf("| C : %d      |   C : %d    |\n", ocorrencias_periodicos[8], ocorrencias_conferencias[8]);
+    printf("+-------------+-------------+\n");
 }
